@@ -4,7 +4,7 @@ server:
 spring:
   datasource:
     url: jdbc:mysql://localhost:3306/myfinance?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: root
+    username: myfinance
     password: myfinance
     driver-class-name: com.mysql.cj.jdbc.Driver
 
