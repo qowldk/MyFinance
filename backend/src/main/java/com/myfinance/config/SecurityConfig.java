@@ -21,7 +21,9 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable()) // CSRF 보호 비활성화 (API 서버에선 일반적)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login", "/api/auth/register").permitAll() // 회원가입/로그인 허용
+                        .requestMatchers("/api/auth/login", "/api/auth/register",
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**", "/swagger-ui.html" ).permitAll() // 회원가입/로그인 허용
                         .anyRequest().authenticated() // 나머지는 인증 필요
                 )
                 .addFilterBefore(jwtAuthFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);

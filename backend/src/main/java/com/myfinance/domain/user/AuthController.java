@@ -3,6 +3,11 @@ package com.myfinance.domain.user;
 import com.myfinance.domain.user.dto.LoginRequest;
 import com.myfinance.domain.user.dto.RegisterRequest;
 import com.myfinance.domain.user.dto.UserInfoResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name="인증 API", description = "회원가입 및 로그인 관련 API")
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -17,6 +23,7 @@ public class AuthController {
     private final UserRepository userRepository;
 
     @PostMapping("/register")
+    @Operation(summary = "회원가입", description = "사용자 정보를 등록하여 회원가입합니다.")
     public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
         try {
             userService.register(request);
@@ -27,6 +34,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    @Operation(summary = "로그인", description = "아이디와 비밀번호를 입력하고 JWT 토큰을 반환합니다.")
     public ResponseEntity<String> login(@RequestBody LoginRequest request) {
         try {
             String token = userService.login(request.getUsername(), request.getPassword());
@@ -37,6 +45,12 @@ public class AuthController {
     }
 
     @GetMapping("/info")
+    @Operation(summary = "사용자 정보 조회", description = "JWT 인증을 통해 로그인한 사용자의 정보를 조회합니다.", security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "성공적으로 사용자 정보를 반환함"),
+            @ApiResponse(responseCode = "401", description = "JWT 토큰이 없거나 유효하지 않음"),
+            @ApiResponse(responseCode = "404", description = "해당 사용자 정보를 찾을 수 없음")
+    })
     public ResponseEntity<UserInfoResponse> userInfo(Authentication authentication) {
         String username = authentication.getName();
 
