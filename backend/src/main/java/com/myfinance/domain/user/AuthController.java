@@ -13,6 +13,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
 @Tag(name="인증 API", description = "회원가입 및 로그인 관련 API")
@@ -35,12 +37,12 @@ public class AuthController {
 
     @PostMapping("/login")
     @Operation(summary = "로그인", description = "아이디와 비밀번호를 입력하고 JWT 토큰을 반환합니다.")
-    public ResponseEntity<String> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequest request) {
         try {
-            String token = userService.login(request.getUsername(), request.getPassword());
-            return ResponseEntity.ok(token);
+            Map<String, String> tokens = userService.login(request.getUsername(), request.getPassword());
+            return ResponseEntity.ok(tokens);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 

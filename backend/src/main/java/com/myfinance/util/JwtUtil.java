@@ -45,4 +45,16 @@ public class JwtUtil {
             return null;
         }
     }
+    
+    public String generateRefreshToken(String username) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + 1000L * 60 * 60 * 24 * 7); // 7일
+
+        return Jwts.builder()
+                .setSubject(username)
+                .setIssuedAt(now)
+                .setExpiration(expiry)
+                .signWith(key)
+                .compact();
+    }
 }

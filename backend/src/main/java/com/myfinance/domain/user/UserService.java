@@ -1,10 +1,15 @@
 package com.myfinance.domain.user;
 
+import com.myfinance.domain.token.RefreshToken;
+import com.myfinance.domain.token.RefreshTokenRepository;
 import com.myfinance.domain.user.dto.RegisterRequest;
 import com.myfinance.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -12,6 +17,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     public void register(RegisterRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -27,7 +33,7 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public String login(String username, String password) {
+    public Map<String, String> login(String username, String password) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
@@ -35,6 +41,19 @@ public class UserService {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
-        return jwtUtil.generateToken(user.getUsername());
+        String accessToken = jwtUtil.generateToken(username);
+        String refreshToken = jwtUtil.generateRefreshToken(username);
+
+        RefreshToken tokenEntity = RefreshToken.builder()
+                .username(username)
+                .token(refreshToken)
+                .expiryDate(LocalDateTime.now().plusHours(7))
+                .build();
+        refreshTokenRepository.save(tokenEntity);
+
+        return Map.of(
+                "accessToken", accessToken,
+                "refreshToken", refreshToken
+        );
     }
 }
