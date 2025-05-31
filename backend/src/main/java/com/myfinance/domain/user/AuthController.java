@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -104,5 +105,33 @@ public class AuthController {
         String newAccessToken = jwtUtil.generateToken(username);
 
         return ResponseEntity.ok(Map.of("access_token", newAccessToken));
+    }
+
+    @DeleteMapping("/logout")
+    @Transactional
+    @Operation(
+            summary = "로그아웃",
+            description = "Access Token을 이용하여 사용자 인증 후, 해당 사용자의 Refresh Token을 삭제하여 로그아웃 처리합니다.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "로그아웃 성공"),
+            @ApiResponse(responseCode = "400", description = "Authorization 헤더가 누락되었거나 잘못된 형식임"),
+            @ApiResponse(responseCode = "401", description = "유효하지 않은 Access Token")
+    })
+    public ResponseEntity<String> logout(@RequestHeader("Authorization") String authHeader) {
+        if (authHeader == null && !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Authorization 헤더가 필요합니다.");
+        }
+
+        String token = authHeader.substring(7);
+        String username = jwtUtil.validateToken(token);
+
+        if (username == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 토큰입니다.");
+        }
+
+        refreshTokenRepository.deleteByUsername(username);
+        return ResponseEntity.ok("로그아웃 처리되었습니다.");
     }
 }
